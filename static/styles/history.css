@@ -1,0 +1,44 @@
+#section_history {
+    padding: 50px;
+}
+
+#game_info {
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 700px;
+}
+
+#game_info td:first-child {
+    width: 30%;
+    min-width: max-content;
+}
+
+#game_info td {
+    font-size: 160%;
+    padding: 4px 20px;
+}
+
+#history_info {
+    width: 100%;
+    max-width: 700px;
+}
+
+#history_info th {
+    padding: 2px 4px;
+}
+
+#history_info th:last-of-type {
+    text-align: left;
+}
+
+#history_info td:first-child {
+    width: 30px;
+    text-align: center;
+    background-color: var(--clr-highlighted);
+}
+
+#history_info td {
+    padding: 2px 4px;
+    border: 1px solid var(--clr-main);
+    background-color: var(--clr-semiback);
+}

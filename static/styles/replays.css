@@ -1,0 +1,85 @@
+#section_games {
+    margin: 20px 0;
+    align-content: center;
+}
+
+#game_table_header {
+    margin: auto;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+#game_table {
+    width: fit-content;
+    margin: auto;
+    height: 400px;
+    overflow-y: scroll;
+    border: 1px solid;
+}
+
+#game_table > table {
+    border-collapse: collapse;
+}
+
+tr {
+    cursor: default;
+    background-color: var(--clr-semiback);
+}
+
+tr:has(input:checked) {
+    background-color: var(--clr-highlighted) !important;
+}
+
+th {
+    background-color: var(--clr-topback);
+}
+
+td {
+    background-color: inherit;
+    text-align: center;
+}
+
+th, td {
+    overflow: hidden;
+}
+
+th:not(:first-child), td:not(:first-child) {
+    border-left: 1px solid;
+}
+
+td:last-child {
+    text-align: center;
+}
+
+#game_control {
+    display: flex;
+    width: 680px;
+    margin: auto;
+    padding: 10px 0;
+    justify-content: space-between;
+}
+
+#game_control > input {
+    width: calc((684px - 60px) / 3);
+    border: 1px solid var(--clr-main);
+    border-style: ridge;
+    background-color: var(--clr-semiback);
+    transition: .25s;
+    cursor: pointer;
+}
+#game_control > input:hover {
+    text-shadow: 0 0 15px var(--clr-main);
+    box-shadow: 0 0 5px var(--clr-main);
+}
+
+#game_control > input:disabled {
+    opacity: .5;
+}
+
+#game_new_cb input {
+    width: 100%;
+}
+
+#select_user_id {
+    margin: 0 20px;
+}
