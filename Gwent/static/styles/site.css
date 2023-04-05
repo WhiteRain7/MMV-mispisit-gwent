@@ -1,0 +1,131 @@
+* {
+    --clr-topback: #DDDDAA;
+    --clr-semiback: #EEEEC6;
+    --clr-back: #FFFFDD;
+    --clr-highlighted: #CCCCAA;
+    --clr-main: #663333;
+    --clr-scrollbar: var(--clr-topback);
+    --clr-sb-thumb: #BBBB77;
+
+    font-size: 16px;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+
+    color: var(--clr-main);
+    border-color: var(--clr-main);
+    background-color: var(--clr-back);
+    accent-color: var(--clr-main);
+}
+
+.hidden {
+    display: none !important;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: var(--clr-scrollbar);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--clr-sb-thumb);
+}
+
+
+.click_button {
+    padding: 4px 10px;
+    border: 1px solid var(--clr-main);
+    border-style: ridge;
+    background-color: var(--clr-semiback);
+    transition: .25s;
+    cursor: pointer;
+}
+.click_button:hover {
+    text-shadow: 0 0 15px var(--clr-main);
+    box-shadow: 0 0 5px var(--clr-main);
+}
+
+
+#section_head {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 40px;
+    height: min-content;
+    background-color: var(--clr-topback);
+    border-bottom: 1px solid;
+}
+
+#section_head > h1 {
+    margin: 0 20px;
+    color: var(--clr-main);
+    background-color: transparent;
+    text-align: left;
+    cursor: default;
+}
+
+#section_head > a {
+    margin: 0 20px;
+    color: var(--clr-main);
+    background-color: transparent;
+    text-align: right;
+    text-decoration: none;
+    transition: .25s;
+    cursor: pointer;
+}
+#section_head > a:hover {
+    text-shadow: 0 0 15px var(--clr-main);
+}
+
+
+#notifications {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    min-width: 200px;
+    max-width: 600px;
+    height: fit-content;
+    margin-bottom: 10px;
+    background-color: transparent;
+}
+
+#notifications > *[id^='not-'] {
+    display: block;
+    width: 100%;
+    height: fit-content;
+    margin: 10px auto;
+    border: 1px solid;
+}
+
+#notifications > *[id^='not-'] .not-header {
+    width: calc(100% - 8px);
+    min-height: 20px;
+    padding: 2px 4px;
+    background-color: var(--clr-semiback);
+    font-size: 120%;
+}
+#notifications > *[id^='not-'] .not-header * {
+    color: inherit;
+    background-color: inherit;
+}
+
+#notifications > *[id^='not-'] .not-body {
+    width: calc(100% - 8px);
+    height: fit-content;
+    padding: 4px;
+}
+
+#notifications > *[id^='not-'] > .not-nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    flex-wrap: nowrap;
+    padding: 4px;
+}

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>admin</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/site.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/admin.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/game_forms.css') }}">
+        <script type="application/javascript" src="{{ url_for('static',filename='scripts/admin.js') }}"></script>
+    </head>
+
+    <body>
+        <section id="section_head">
+            <h1>Администрирование записей матчей</h1>
+            <a href="/">к основной странице</a>
+        </section>
+
+        <section id="section_games">
+            <table id="game_table_header">
+                <colgroup>
+                    <col style="width: 40px">
+                    <col style="width: 40px">
+                    <col style="width: 40px">
+                    <col style="width: 20px">
+                    <col style="width: 150px">
+                    <col style="width: 150px">
+                    <col style="width: 190px">
+                    <col style="width: 40px">
+                </colgroup>
+    
+                <caption>~ записи матчей ~</caption>
+    
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>pl-1</th>
+                        <th>pl-2</th>
+                        <th>R</th>
+                        <th>deck-1</th>
+                        <th>deck-2</th>
+                        <th>actions</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+    
+            <div id="game_table">
+                <table>
+                    <colgroup>
+                        <col style="width: 40px">
+                        <col style="width: 40px">
+                        <col style="width: 40px">
+                        <col style="width: 20px">
+                        <col style="width: 150px">
+                        <col style="width: 150px">
+                        <col style="width: 190px">
+                        <col style="width: 30px">
+                    </colgroup>
+                    
+                    <tbody>
+                    {% for game in games %}
+                        <tr onclick="document.getElementById('game_{{ game.id }}_cb').click()" id="game_{{ game.id }}_tr">
+                            <td>{{ game.id }}</td>
+                            <td>{{ game.pl1 }}</td>
+                            <td>{{ game.pl2 }}</td>
+                            <td>{{ game.res }}</td>
+                            <td>{{ game.d1 }}</td>
+                            <td>{{ game.d2 }}</td>
+                            <td>{{ game.actions }}</td>
+                            <td><input id="game_{{ game.id }}_cb" type="radio" name="game_radio" value="{{ game.id }}" onclick="document.getElementById('game_{{ game.id }}_cb').click(); game_control(true)"></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="game_control">
+                <input type="button" value="создать"  class="click_button" onclick="game_form_create()">
+                <input type="button" value="изменить" class="click_button" onclick="game_form_change()" id="GC_change" disabled>
+                <input type="button" value="удалить"  class="click_button" onclick="game_form_delete()" id="GC_delete" disabled>
+            </div>
+        </section>
+
+        <section id="section_users">
+            <table id="user_table_header">
+                <colgroup>
+                    <col style="width: 40px">
+                    <col style="width: 250px">
+                    <col style="width: 350px">
+                    <col style="width: 40px">
+                </colgroup>
+    
+                <caption>~ список игроков ~</caption>
+    
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>имя</th>
+                        <th>почта</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+    
+            <div id="user_table">
+                <table>
+                    <colgroup>
+                        <col style="width: 40px">
+                        <col style="width: 250px">
+                        <col style="width: 350px">
+                        <col style="width: 30px">
+                    </colgroup>
+                    
+                    <tbody>
+                    {% for user in users %}
+                        <tr onclick="document.getElementById('user_{{ user.id }}_cb').click()">
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td><input id="user_{{ user.id }}_cb" type="checkbox" onclick="document.getElementById('user_{{ user.id }}_cb').click()"></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="dark_bg" class="hidden" onclick="hide_all()"></div>
+        <aside id="new_game_panel" class="hidden">
+            <form id="new_game_form" action="/new_game" method="POST" target="_blank" onsubmit="add_new_game()">
+                <h1>Создание новой записи матча</h1>
+                <div class="form_block">
+                    <input type='text' list="userlist" name="p1" placeholder='первый игрок...' required>
+                    <input type='text' list="userlist" name="p2" placeholder='второй игрок...' required>
+                    <select name="result">
+                        <option value="0">ничья</option>
+                        <option value="1">победа игрока 1</option>
+                        <option value="2">победа игрока 2</option>
+                    </select>
+                </div>
+                
+                <div class="form_block">
+                    <input type='text' name="d1" placeholder='колода игрока 1'>
+                    <input type='text' name="d2" placeholder='колода игрока 2'>
+                    <input type='text' name="actions" placeholder='последовательность действий'>
+                </div>
+                
+                <div class="form_block">
+                    <input type="submit" value="отправить" class="click_button">
+                    <input type="reset" value="сбросить" class="click_button">
+                    <input type="button" value="закрыть" class="click_button" onclick="hide_all()">
+                </div>
+            </form>
+        </aside>
+
+        
+        <aside id="edit_game_panel" class="hidden">
+            <form id="edit_game_form" action="/edit_game" method="POST" target="_blank" onsubmit="change_game()">
+                <h1>Редактирование записи матча</h1>
+                <div class="form_block">
+                    <input type='hidden' name="gid" value="-1">
+                    <input type='text' list="userlist" name="p1" placeholder='первый игрок...' required>
+                    <input type='text' list="userlist" name="p2" placeholder='второй игрок...' required>
+                    <select name="result">
+                        <option value="0">ничья</option>
+                        <option value="1">победа игрока 1</option>
+                        <option value="2">победа игрока 2</option>
+                    </select>
+                </div>
+                
+                <div class="form_block">
+                    <input type='text' name="d1" placeholder='колода игрока 1'>
+                    <input type='text' name="d2" placeholder='колода игрока 2'>
+                    <input type='text' name="actions" placeholder='последовательность действий'>
+                </div>
+                
+                <div class="form_block">
+                    <input type="submit" value="отправить" class="click_button">
+                    <input type="button" value="сбросить" class="click_button" onclick="game_form_change()">
+                    <input type="button" value="закрыть" class="click_button" onclick="hide_all()">
+                </div>
+                <input type="reset" class="hidden" style="display: none !important;" disabled>
+            </form>
+        </aside>
+
+        
+        <aside id="delete_game_panel" class="hidden">
+            <form id="delete_game_form" action="/delete_game" method="POST" target="_blank" onsubmit="delete_game()">
+                <h1>Удаление записи матча</h1>
+                <div class="form_block">
+                    <input type='hidden' name="gid" value="-1">
+                    <input type='text' list="userlist" name="p1" placeholder='первый игрок...' readonly>
+                    <input type='text' list="userlist" name="p2" placeholder='второй игрок...' readonly>
+                    <select name="result" onclick="event.preventDefault()">
+                        <option value="0">ничья</option>
+                        <option value="1">победа игрока 1</option>
+                        <option value="2">победа игрока 2</option>
+                    </select>
+                </div>
+                
+                <div class="form_block">
+                    <input type='text' name="d1" placeholder='колода игрока 1' readonly>
+                    <input type='text' name="d2" placeholder='колода игрока 2' readonly>
+                    <input type='text' name="actions" placeholder='последовательность действий' readonly>
+                </div>
+                
+                <div class="form_block">
+                    <input type="submit" value="отправить" class="click_button">
+                    <input type="button" value="сбросить" class="click_button" disabled>
+                    <input type="button" value="закрыть" class="click_button" onclick="hide_all()">
+                </div>
+                <input type="reset" class="hidden" style="display: none !important;" disabled>
+            </form>
+        </aside>
+            
+        <datalist id="userlist">
+            {% for user in users %}
+                <option value="{{ user.name }} ({{ user.id }})"></option>
+            {% endfor %}
+        </datalist>
+
+        <aside id="notifications">
+        </aside>
+    </body>
+</html>
