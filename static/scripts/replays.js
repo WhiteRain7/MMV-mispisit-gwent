@@ -22,5 +22,6 @@ function game_control (enabled = true) {
 
 function go_to_match () {
     radio = document.querySelector('#game_table tr input[type="radio"]:checked')
-    if (radio) document.location.search = 'history_of=' + radio.value
+    user_id = (new URL(document.location)).searchParams.get('user_id')
+    if (radio) document.location.search = 'history_of=' + radio.value + (user_id == null? '' : '&user_id=' + user_id.toString())
 }

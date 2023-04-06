@@ -1,6 +1,8 @@
 import sqlite3 as sql
 from random import randint
 
+DATABASE_NAME = 'gwent_db.sqlite3'
+
 class Users:
     BASE = 'users'
     FIELDS = ('id', 'nickname', 'email')
@@ -11,7 +13,7 @@ class Users:
             Returns user data as dict from database by specified user_id.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
             data = base.execute(f"""
@@ -32,7 +34,7 @@ class Users:
             Returns list of users
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
       
             data = base.execute(f"""
@@ -53,12 +55,22 @@ class Users:
             Sends to user_id if he wins (1) or lose (-1) (or draw (0)).
         '''
         data = Users.get_user_by_id(user_id)
+        print(data['email'], '-', f'results ({result}) sended')
 
     @staticmethod
-    def send_match_history_to (user_id : int, history : list[str]):
+    def send_match_history_to (user_id : int, history : list[str]) -> list[str]:
         '''
-            Sends to user_id by email specified match history.
+            Returns modified history.
         '''
+        try:
+            data = Users.get_user_by_id(user_id)
+
+            if data:
+                for i in range(len(history)):
+                    history[i] = history[i].replace(data['nickname'], data['nickname'] + ' (вы)')
+
+            return history
+        except: return history
 
 class Game_records:
     BASE = 'games'
@@ -68,35 +80,56 @@ class Game_records:
     def create_game (**game_data) -> int | None:
         '''
             Creates new game record and writes it to DB. Returns game_id on success.
+            If id given, updates old record with given params.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
             determine_winner = False
-            if game_data['result'] is None or game_data['result'] == -1:
+            if game_data.get('result', None) is None or game_data.get('result', None) == -1:
                 determine_winner = True
                 game_data['result'] = 0
 
-            base.execute(f"""
-                INSERT INTO {Game_records.BASE} (
-                    player_1,
-                    player_2,
-                    result,
-                    deck_1,
-                    deck_2,
-                    actions
-                ) VALUES (
-                    {game_data['p1']},
-                    {game_data['p2']},
-                    {game_data['result']},
-                    '{game_data['d1']}',
-                    '{game_data['d2']}',
-                    '{game_data['actions']}'
-                )
-            """)
+            if game_data.get('id', None) is None:
+                base.execute(f"""
+                    INSERT INTO {Game_records.BASE} (
+                        player_1,
+                        player_2,
+                        result,
+                        deck_1,
+                        deck_2,
+                        actions
+                    ) VALUES (
+                        {game_data['p1']},
+                        {game_data['p2']},
+                        {game_data['result']},
+                        '{game_data['d1']}',
+                        '{game_data['d2']}',
+                        '{game_data['actions']}'
+                    )
+                """)
+                id = base.execute(f'SELECT id FROM {Game_records.BASE} ORDER BY _rowid_ DESC').fetchone()[0]
 
-            id = base.execute(f'SELECT id FROM {Game_records.BASE} ORDER BY _rowid_ DESC').fetchone()[0]
+            else:
+                p1 = game_data.get('p1', None)
+                p2 = game_data.get('p2', None)
+                res = game_data.get('result', None)
+                d1 = game_data.get('d1', None)
+                d2 = game_data.get('d2', None)
+                actions = game_data.get('actions', None)
+
+                base.execute(f"""
+                    UPDATE {Game_records.BASE} SET
+                        player_1={repr(p1) if p1 else 'player_1'},
+                        player_2={repr(p2) if p2 else 'player_2'},
+                        result={repr(res) if res else 'result'},
+                        deck_1={repr(d1) if d1 else 'deck_1'},
+                        deck_2={repr(d2) if d2 else 'deck_1'},
+                        actions={repr(actions) if actions else 'actions'}
+                    WHERE id={game_data['id']}
+                """)
+                id = game_data['id']
 
             if determine_winner:
                 base.execute(f"""
@@ -118,7 +151,7 @@ class Game_records:
             Returns game data as dict from database by specified game_id.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
             data = base.execute(f"""
@@ -139,14 +172,15 @@ class Game_records:
             Removes game record of given id and returns True on success and False otherwise.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
             base.execute(f"""
-                REMOVE FROM {Game_records.BASE}
+                DELETE FROM {Game_records.BASE}
                 WHERE id={game_id}
             """)
 
+            base.commit()
             base.close()
             return True
         except: return False
@@ -159,7 +193,7 @@ class Game_records:
             If send_to_users is True - calls Users.send_match_results_to for both players to send results to them.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
             game = Game_records.get_game_by_id(game_id)
             base.close()
@@ -197,7 +231,7 @@ class Game_records:
             Returns id of player who won the match with given game_id. On draw returns -1.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
             game = Game_records.get_game_by_id(game_id)
             base.close()
@@ -291,7 +325,7 @@ class Game_records:
             Returns list of games data where given user participated.
         '''
         try:
-            base = sql.connect('gwent_db.sqlite3')
+            base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
             if user_id == -1:         
