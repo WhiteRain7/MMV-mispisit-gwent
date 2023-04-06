@@ -54,8 +54,13 @@ class Users:
         '''
             Sends to user_id if he wins (1) or lose (-1) (or draw (0)).
         '''
+        if result not in (-1, 0, 1):
+            print(f'invalid result to send - {result}')
+            return
+
         data = Users.get_user_by_id(user_id)
-        print(data['email'], '-', f'results ({result}) sended')
+        if data: print(data['email'], '-', f'results ({result}) sended', flush=False)
+        else: print(f'user with id {user_id} is not exists')
 
     @staticmethod
     def send_match_history_to (user_id : int, history : list[str]) -> list[str]:
@@ -104,12 +109,12 @@ class Game_records:
                         {game_data['p1']},
                         {game_data['p2']},
                         {game_data['result']},
-                        '{game_data['d1']}',
-                        '{game_data['d2']}',
-                        '{game_data['actions']}'
+                        '{game_data.get('d1', '')}',
+                        '{game_data.get('d2', '')}',
+                        '{game_data.get('actions', '')}'
                     )
                 """)
-                id = base.execute(f'SELECT id FROM {Game_records.BASE} ORDER BY _rowid_ DESC').fetchone()[0]
+                gid = base.execute(f'SELECT id FROM {Game_records.BASE} ORDER BY _rowid_ DESC').fetchone()[0]
 
             else:
                 p1 = game_data.get('p1', None)
@@ -129,19 +134,21 @@ class Game_records:
                         actions={repr(actions) if actions else 'actions'}
                     WHERE id={game_data['id']}
                 """)
-                id = game_data['id']
+                gid = game_data['id']
+
+            base.commit()
 
             if determine_winner:
                 base.execute(f"""
                     UPDATE {Game_records.BASE}
-                    SET result={Game_records.determine_winner_of(id, send_to_users=False)}
-                    WHERE id={id}
+                    SET result={Game_records.determine_winner_of(gid, send_to_users=False)}
+                    WHERE id={gid}
                 """)
+                base.commit()
 
-            base.commit()
             base.close()
 
-            return id
+            return gid
 
         except: return None
 
@@ -175,6 +182,8 @@ class Game_records:
             base = sql.connect(DATABASE_NAME)
             base.execute('PRAGMA foreign_keys = ON')
 
+            assert base.execute(f'SELECT 1 FROM {Game_records.BASE} where id={game_id}').fetchone()[0]
+
             base.execute(f"""
                 DELETE FROM {Game_records.BASE}
                 WHERE id={game_id}
@@ -200,10 +209,10 @@ class Game_records:
 
             if game is None: return -1
 
-            actions = game.get('actions', '').split(',')
+            actions = [int(a) for a in game.get('actions', '').split(',') if a.isdecimal()]
 
-            sum_power_1 = sum(int(power) for power in actions[0::2])
-            sum_power_2 = sum(int(power) for power in actions[1::2])
+            sum_power_1 = sum(power for power in actions[0::2])
+            sum_power_2 = sum(power for power in actions[1::2])
 
             if sum_power_1 > sum_power_2: # player 1 wins
                 if send_to_users:
@@ -249,9 +258,15 @@ class Game_records:
             Returns id of player who lose the match with given game_id. On draw returns -1.
         '''
         try:
-            winner = Game_records.get_winner_id_of(game_id)
-            if   winner == 1: return 2
-            elif winner == 2: return 1
+            base = sql.connect(DATABASE_NAME)
+            base.execute('PRAGMA foreign_keys = ON')
+            game = Game_records.get_game_by_id(game_id)
+            base.close()
+
+            result = game.get('result', -1)
+
+            if   result == 2: return game.get('player_1', -1)
+            elif result == 1: return game.get('player_2', -1)
             else: return -1
         except: return -1
     
@@ -273,9 +288,9 @@ class Game_records:
             history.append(f"Колода игрока {pl1} состоит из карт с силами {game.get('deck_1', '').replace(',', ', ')}")
             history.append(f"Колода игрока {pl2} состоит из карт с силами {game.get('deck_2', '').replace(',', ', ')}")
             history.append('Начало игры')
-            for action in game.get('actions', '').split(','):
-                if is_pl1: power_1 += int(action)
-                else:      power_2 += int(action)
+            for action in [int(a) for a in game.get('actions', '').split(',') if a.isdecimal()]:
+                if is_pl1: power_1 += action
+                else:      power_2 += action
                 history.append(f"{pl1 if is_pl1 else pl2} разыгрывает карту с силой {action} (суммарно {power_1 if is_pl1 else power_2})")
                 is_pl1 = not is_pl1
 
@@ -323,6 +338,7 @@ class Game_records:
     def get_games_of_user_by_id (user_id : int) -> list[dict]:
         '''
             Returns list of games data where given user participated.
+            If -1 given, returns all games.
         '''
         try:
             base = sql.connect(DATABASE_NAME)
